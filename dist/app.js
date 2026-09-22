@@ -48,4 +48,18 @@ if(finePointer.matches){
   window.addEventListener('pointermove',event=>{const now=performance.now();if(now-lastSparkle<38)return;lastSparkle=now;const sparkle=el('i',null,'cursor-sparkle');sparkle.setAttribute('aria-hidden','true');sparkle.style.left=`${event.clientX-10+Math.random()*20}px`;sparkle.style.top=`${event.clientY-10+Math.random()*20}px`;sparkle.style.setProperty('--spark-color',sparkleColors[Math.floor(Math.random()*sparkleColors.length)]);sparkle.style.setProperty('--spark-x',`${-10+Math.random()*20}px`);sparkle.style.setProperty('--spark-y',`${10+Math.random()*18}px`);sparkle.style.width=sparkle.style.height=`${3+Math.floor(Math.random()*3)}px`;document.body.append(sparkle);sparkle.addEventListener('animationend',()=>sparkle.remove(),{once:true});setTimeout(()=>sparkle.remove(),900);},{passive:true});
  }
 }
+const bgmAudio=document.querySelector('#background-music');
+const bgmToggle=document.querySelector('#bgm-toggle');
+const bgmLabel=document.querySelector('#bgm-label');
+if(bgmAudio&&bgmToggle&&bgmLabel){
+ bgmAudio.volume=.35;
+ const updateBgmState=playing=>{bgmToggle.setAttribute('aria-pressed',String(playing));bgmToggle.setAttribute('aria-label',playing?'배경음악 정지':'배경음악 재생');bgmLabel.textContent=playing?'BGM 정지':'BGM 재생';document.body.classList.toggle('bgm-playing',playing);};
+ try{const savedTime=Number(sessionStorage.getItem('ai-atelier-bgm-time'));if(Number.isFinite(savedTime)&&savedTime>0)bgmAudio.currentTime=savedTime;}catch{}
+ bgmToggle.addEventListener('click',async()=>{if(bgmAudio.paused){try{await bgmAudio.play();updateBgmState(true);}catch{updateBgmState(false);bgmLabel.textContent='다시 재생';}}else{bgmAudio.pause();updateBgmState(false);}});
+ bgmAudio.addEventListener('play',()=>updateBgmState(true));
+ bgmAudio.addEventListener('pause',()=>updateBgmState(false));
+ bgmAudio.addEventListener('error',()=>{updateBgmState(false);bgmLabel.textContent='BGM 오류';});
+ window.addEventListener('pagehide',()=>{try{sessionStorage.setItem('ai-atelier-bgm-time',String(bgmAudio.currentTime));}catch{}});
+ updateBgmState(false);
+}
 window.addEventListener('pagehide',()=>localItems.forEach(item=>URL.revokeObjectURL(item.url)));
